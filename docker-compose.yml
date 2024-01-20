@@ -1,0 +1,26 @@
+version: '3'
+services:
+
+    rabbitmq:
+        image: rabbitmq:3.12-alpine
+        ports:
+            - "5672:5672"
+            - "15672:15672"
+        volumes:
+            - rabbitmq_data:/var/lib/rabbitmq/
+            - rabbitmq_log:/var/log/rabbitmq
+
+    backend:
+        build: ./backend
+        volumes:
+            - ./backend:/var/www/html
+        ports:
+            - "80:80"
+        depends_on:
+            - rabbitmq
+        environment:
+            - PORT=80
+
+volumes:
+    rabbitmq_data:
+    rabbitmq_log:
