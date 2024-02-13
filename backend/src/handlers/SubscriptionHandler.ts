@@ -53,8 +53,6 @@ export class SubscriptionHandler implements BaseHandler<ClientID, Message>
         }
 
         if (message.type === 'unsubscribe') {
-            console.log("UnSUB", from);
-            console.log(this.queueToClient);
             if (message.target === 'all') {
                 this.queueToClient.forEach(q => {
                     q.delete(from);
@@ -62,7 +60,6 @@ export class SubscriptionHandler implements BaseHandler<ClientID, Message>
 
                 // Also remove the queue
                 this.queueToClient.delete(buildQueueName(from))
-                console.log(this.queueToClient);
                 return;
             }
 
