@@ -21,7 +21,21 @@ const TrucksProvider = ({ children }: { children: ReactNode }) => {
                 setTrucks(lastMessage.data);
                 break;
             case 'available_trucks':
-                setAvailableTrucks(lastMessage.data)
+                const availableTrucks = lastMessage.data;
+                setAvailableTrucks(availableTrucks)
+
+
+                const trucksIds = trucks.map(x => x.id);
+                const availableTrucksIds = availableTrucks.map(x => x.id);
+                // Check if trucks array has a truck that is no longer available, if so remove it
+                const diff = trucksIds.filter(x => !availableTrucksIds.includes(x));
+
+                if (diff.length > 0) {
+                    // Remove it from the truck array
+                    setTrucks((prev) => prev.filter(x => !diff.includes(x.id)))
+                }
+                
+                // setTrucks((prev) => prev.filter(x => lastMessage.data.includes(x)))
                 break;
 
             default:

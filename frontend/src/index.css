@@ -14,3 +14,19 @@ body {
 #root {
   min-height: 100dvh;
 }
+
+.truck-marker {
+  background-color: white;
+  padding-top: 0;
+  padding: 4px;
+  border-radius: 4px;
+
+  p {
+    text-align: center;
+  }
+
+  svg {
+    color: 'black'
+  }
+  
+}

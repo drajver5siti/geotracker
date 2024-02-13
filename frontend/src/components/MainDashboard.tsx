@@ -5,11 +5,13 @@ import LocationUpdater from "./LocationUpdater";
 import { TrucksContext } from "../context/TrucksContext";
 import { WebSocketContext } from "../context/WebSocketContext";
 import { FaTruckFront } from "react-icons/fa6";
+import { AuthContext } from "../context/AuthContext";
 
 const MainDashboard = () => {
 
     const { availableTrucks } = useContext(TrucksContext);
     const { sendJsonMessage } = useContext(WebSocketContext);
+    const { username } = useContext(AuthContext)
 
     const handleSubscribe = (id: string) => {
         sendJsonMessage(
@@ -23,7 +25,8 @@ const MainDashboard = () => {
     return (
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 3fr' }}>
             <div>
-                <LocationUpdater />
+                Your username is: {username} <br/>
+                <LocationUpdater /> <br/> <br/>
                 {availableTrucks.map((t) => (
                     <div key={t.id} style={{ display: 'flex', columnGap: '5px' }}>
                         <FaTruckFront fontSize={'1.2rem'} />
@@ -36,7 +39,7 @@ const MainDashboard = () => {
 
             </div>
             <div>
-                <APIProvider apiKey="AIzaSyBwFgd9qG1hdC63jv1unEYvBE3xZd564A0">
+                <APIProvider  apiKey={import.meta.env.VITE_MAPS_API_KEY}>
                     <Map />
                 </APIProvider>
             </div>

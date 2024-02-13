@@ -7,7 +7,9 @@ let clients: Map<ClientID, ws> = new Map();
 
 type Handler = (from: ClientID, message: Message) => void
 
-export const establishWS = (server: Server, handler: Handler) => {
+type CloseHandler = (from: ClientID) => void
+
+export const establishWS = (server: Server, handler: Handler, onClose: CloseHandler) => {
     socket = new WebSocketServer({ server });
     socket.on('connection', (ws, msg) => {
 
@@ -27,7 +29,10 @@ export const establishWS = (server: Server, handler: Handler) => {
                 console.log("Incoming message is not valid json", err);
             }
         })
-        ws.on('close', () => clients.delete(id));
+        ws.on('close', () => {
+            clients.delete(id)
+            onClose(id);
+        });
     })
 }
 

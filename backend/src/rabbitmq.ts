@@ -3,7 +3,7 @@ import { ClientID, LocationMessage } from './types';
 
 const EXCHANGE = 'truck_locations';
 
-const buildQueueName = (id: string) => 'truck_' + id; 
+export const buildQueueName = (id: string) => 'truck_' + id; 
 
 const streamSubscribers = new Map<string, Set<string>>();
 

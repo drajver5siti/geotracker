@@ -24,7 +24,6 @@ app.use(express.urlencoded({
 
 // app.use(express.static(path.join(__dirname, '../frontend')));
 
-const availableClients: ClientID[] = [];
 const handler = new MessageHandler<Message, ClientID>();
 
 const main = async () => {
@@ -33,12 +32,15 @@ const main = async () => {
     const channel = await establishConnection();
     channel.prefetch(1);
 
-    handler.addHandler(new LocationHandler(channel, availableClients));
+    handler.addHandler(new LocationHandler(channel));
     handler.addHandler(new SubscriptionHandler(channel))
 
     establishWS(
         server,
-        (from, message) => handler.handle(from, message)
+        (from, message) => handler.handle(from, message),
+        (from) => {
+            handler.handle(from, { type: 'unsubscribe', target: 'all' })
+        }
     )
 }
 

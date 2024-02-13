@@ -10,27 +10,36 @@ export class LocationHandler implements BaseHandler<string, Message>
     private channel: ampq.Channel;
     private availableClients: ClientID[];
 
-    public constructor(channel: ampq.Channel, availableClients: ClientID[])
-    {
+    public constructor(channel: ampq.Channel) {
         this.channel = channel;
-        this.availableClients = availableClients;
+        this.availableClients = [];
     }
 
     public supports(message: Message): boolean {
-        return message.type === 'location';
+        return message.type === 'location' || message.type === 'unsubscribe';
     }
 
     public async handle(from: ClientID, message: Message): Promise<void> {
-        await assertStream(this.channel, from);
-        publishToStream(this.channel, from, message as LocationMessage);
+        if (message.type === 'location') {
+            await assertStream(this.channel, from);
+            publishToStream(this.channel, from, message as LocationMessage);
 
-        const oldClient = this.availableClients.find(x => x === from);
-        if (oldClient === undefined) {
-            this.availableClients.push(from);
+            const oldClient = this.availableClients.find(x => x === from);
+            if (oldClient === undefined) {
+                this.availableClients.push(from);
+            }
+
+            const data = this.availableClients.map(x => ({ id: x }));
+
+            broadcastMessage({ type: 'available_trucks', data });
+            return;
         }
 
-        const data = this.availableClients.map(x => ({ id: x }));
+        if (message.type === 'unsubscribe' && message.target === 'all') {
+            this.availableClients = this.availableClients.filter(x => x !== from);
+            broadcastMessage({ type: 'available_trucks', data: this.availableClients.map(x => ({ id: x }))})
+            return;
+        }
 
-        broadcastMessage({ type: 'available_trucks', data });
     }
 }

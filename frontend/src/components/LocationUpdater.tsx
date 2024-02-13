@@ -2,57 +2,66 @@ import { useContext, useEffect, useRef, useState } from "react";
 import { AuthContext } from "../context/AuthContext";
 import { WebSocketContext } from "../context/WebSocketContext";
 
+
+const clearWatcher = (watcher: number | null) => {
+    if (watcher === null) return;
+    navigator.geolocation.clearWatch(watcher);
+}
+
 const LocationUpdater = () => {
     const watcher = useRef<number | null>(null);
     const [updateLocation, setUpdateLocation] = useState(false);
-    
+    const [lastLocation, setLastLocation] = useState<{lat: number|null, lng: number|null}>({ lat: null, lng: null });
+
     const { username } = useContext(AuthContext)
     const { sendJsonMessage } = useContext(WebSocketContext);
 
-    // useEffect(() => {
+    const handleUpdateLocation = (lat: number, lng: number) => {
+        setLastLocation({ lat, lng });
+        sendJsonMessage({ 
+            id: username, 
+            type: "location", 
+            timestamp: Date.now(), 
+            data: { 
+                lng, 
+                lat 
+            } 
+        })
+    }
 
-    //     const interval = setInterval(() => {
-    //         navigator.geolocation.getCurrentPosition(
-    //             (pos) => sendJsonMessage({ id: username, type: "location", timestamp: Date.now(), data: { lng: pos.coords.longitude, lat: pos.coords.latitude }}),
-    //             null,
-    //             {
-    //                 enableHighAccuracy: true
-    //             }
-    //         )
+    useEffect(() => {
+        const interval = setInterval(() => {
+            if (!updateLocation || !lastLocation.lat || !lastLocation.lng) return;
+            handleUpdateLocation(lastLocation.lat, lastLocation.lng)
+        }, 10000);
 
-    //         return () => {
-    //             clearInterval(interval);
-    //         }
+        return () => {
+            clearInterval(interval);
+        }
 
-    //     }, 5000);
-
-
-    // }, []);
+    }, [lastLocation, handleUpdateLocation, updateLocation])
 
     useEffect(() => {
         if (updateLocation === false) {
-            if (watcher.current) {
-                navigator.geolocation.clearWatch(watcher.current);
-            }
+            clearWatcher(watcher.current);
             return;
         }
 
+        if (watcher.current !== null) return;
+
         watcher.current = navigator.geolocation.watchPosition(
-            (pos) => sendJsonMessage({ id: username , type: "location", timestamp: Date.now(), data: { lng: pos.coords.longitude, lat: pos.coords.latitude } }),
+            (pos) => handleUpdateLocation(pos.coords.latitude, pos.coords.longitude),
+            // (pos) => sendPositionMessage(pos.coords.latitude, pos.coords.longitude),
             null,
             {
-                enableHighAccuracy: true,
+                enableHighAccuracy: true
             }
         )
 
         return () => {
-            if (watcher.current) {
-                navigator.geolocation.clearWatch(watcher.current)
-            }
+            clearWatcher(watcher.current);
         }
-
-    }, [updateLocation, username, sendJsonMessage]);
-
+    }, [updateLocation, username, handleUpdateLocation]);
 
     return (
         <label>
